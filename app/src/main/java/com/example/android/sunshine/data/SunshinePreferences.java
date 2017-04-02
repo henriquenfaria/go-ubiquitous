@@ -31,6 +31,9 @@ public final class SunshinePreferences {
     public static final String PREF_COORD_LAT = "coord_lat";
     public static final String PREF_COORD_LONG = "coord_long";
 
+    public static final String PREF_MAX_TEMP = "max_temp";
+    public static final String PREF_MIN_TEMP = "min_temp";
+
     /**
      * Helper method to handle setting location details in Preferences (city name, latitude,
      * longitude)
@@ -241,5 +244,26 @@ public final class SunshinePreferences {
         String lastNotificationKey = context.getString(R.string.pref_last_notification);
         editor.putLong(lastNotificationKey, timeOfNotification);
         editor.apply();
+    }
+
+
+    public static void setTodayDataForWearables(Context context, long max, long min) {
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences.Editor editor = sp.edit();
+        editor.putLong(PREF_MAX_TEMP, max);
+        editor.putLong(PREF_MIN_TEMP, min);
+        editor.apply();
+    }
+
+    public static long getMaxTempForWearables(Context context) {
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
+        long max = sp.getLong(PREF_MAX_TEMP, 0);
+        return max;
+    }
+
+    public static long getMinTempForWearables(Context context) {
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
+        long min = sp.getLong(PREF_MIN_TEMP, 0);
+        return min;
     }
 }
