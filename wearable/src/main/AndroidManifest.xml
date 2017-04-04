@@ -7,12 +7,21 @@
     <!-- Required to act as a custom watch face. -->
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
 
+    <uses-permission
+        android:name="com.google.android.wearable.permission.RECEIVE_COMPLICATION_DATA"/>
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.DeviceDefault">
+        <service android:name=".watchface.WeatherListenerService">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
+                <data android:scheme="wear" android:host="*" android:pathPrefix="/weather" />
+            </intent-filter>
+        </service>
         <service
             android:name=".watchface.SunshineWatchFace"
             android:label="@string/my_digital_name"

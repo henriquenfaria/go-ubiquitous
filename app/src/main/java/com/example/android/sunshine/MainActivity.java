@@ -17,6 +17,8 @@ package com.example.android.sunshine;
 
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -37,16 +39,21 @@ import android.widget.ProgressBar;
 import com.example.android.sunshine.data.SunshinePreferences;
 import com.example.android.sunshine.data.WeatherContract;
 import com.example.android.sunshine.sync.SunshineSyncUtils;
+import com.example.android.sunshine.utilities.SunshineWeatherUtils;
 import com.example.android.sunshine.utilities.WearableUtils;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.wearable.Asset;
 import com.google.android.gms.wearable.DataApi;
 import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.Wearable;
 
+import java.io.ByteArrayOutputStream;
+
 import static com.example.android.sunshine.data.SunshinePreferences.getMaxTempForWearables;
 import static com.example.android.sunshine.data.SunshinePreferences.getMinTempForWearables;
+import static com.example.android.sunshine.data.SunshinePreferences.getWeatherIconIdForWearables;
 import static com.example.android.sunshine.data.SunshinePreferences.setTodayDataForWearables;
 
 public class MainActivity extends AppCompatActivity implements
@@ -278,14 +285,8 @@ public class MainActivity extends AppCompatActivity implements
         mRecyclerView.smoothScrollToPosition(mPosition);
         if (data.getCount() != 0) {
             showWeatherDataView();
-
-            //TODO: Not sure if this could cause side-effect. Must check!
-            data.moveToFirst();
-
-            //TODO: Set today's max/min values
-            setTodayDataForWearables(this,
-                    Math.round(data.getDouble(INDEX_WEATHER_MAX_TEMP)),
-                    Math.round(data.getDouble(INDEX_WEATHER_MIN_TEMP)));
+            storeWeatherDataForWearables(data);
+            sendWeatherDataToWearables();
         }
     }
 
@@ -391,24 +392,7 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         Log.d(TAG, "onConnected: " + bundle);
-
-        PutDataMapRequest putDataMapRequest = PutDataMapRequest
-                .create(WearableUtils.WEATHER_WEARABLE_PATH);
-        //putDataMapRequest.setUrgent();
-
-        //TODO: Just for testing. Get real weather data later.
-        putDataMapRequest.getDataMap().putLong("max", getMaxTempForWearables(this));
-        putDataMapRequest.getDataMap().putLong("min", getMinTempForWearables(this));
-
-        Wearable.DataApi.putDataItem(mGoogleApiClient, putDataMapRequest.asPutDataRequest())
-                .setResultCallback(new ResultCallback<DataApi.DataItemResult>() {
-                    @Override
-                    public void onResult(DataApi.DataItemResult dataItemResult) {
-                        if (Log.isLoggable(TAG, Log.DEBUG)) {
-                            Log.d(TAG, "putDataItem result status: " + dataItemResult.getStatus());
-                        }
-                    }
-                });
+        //sendWeatherDataToWearables();
     }
 
     @Override
@@ -419,5 +403,65 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
         Log.d(TAG, "onConnectionFailed: " + connectionResult);
+    }
+
+    private static Asset createAssetFromBitmap(Bitmap bitmap) {
+        final ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteStream);
+        return Asset.createFromBytes(byteStream.toByteArray());
+    }
+
+    private void storeWeatherDataForWearables(Cursor data) {
+        if (data != null  && data.getCount() != 0) {
+            //TODO: Not sure if this could cause side-effect. Must check!
+            data.moveToFirst();
+
+            int weatherConditionId = (data.getInt(INDEX_WEATHER_CONDITION_ID));
+            long max = Math.round(data.getDouble(INDEX_WEATHER_MAX_TEMP));
+            long min = Math.round(data.getDouble(INDEX_WEATHER_MIN_TEMP));
+
+            Log.d("HNFTEST", "" + weatherConditionId + ", " + max + ", " + min);
+
+            //TODO: Set today's max/min values
+            setTodayDataForWearables(this, weatherConditionId, max, min);
+        }
+    }
+
+    private void sendWeatherDataToWearables() {
+        if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
+            PutDataMapRequest putDataMapRequest = PutDataMapRequest
+                    .create(WearableUtils.WEATHER_WEARABLE_PATH);
+            //TODO: Just for testing. Get real weather data later.
+            /* putDataMapRequest.getDataMap().putLong("icon", SunshineWeatherUtils
+                .getLargeArtResourceIdForWeatherCondition(getWeatherIconIdForWearables(this)));*/
+
+            int weatherIconId = SunshineWeatherUtils
+                    .getSmallArtResourceIdForWeatherCondition(getWeatherIconIdForWearables(this));
+
+
+            Bitmap iconBitmap = BitmapFactory.decodeResource(getApplicationContext().getResources(), weatherIconId);
+            Asset iconAsset = createAssetFromBitmap(iconBitmap);
+
+            if (iconAsset != null) {
+                Log.d("HNFTEST", "iconAsset != null");
+            } else {
+                Log.d("HNFTEST", "iconAsset == null");
+            }
+
+            putDataMapRequest.getDataMap().putAsset("icon", iconAsset);
+            putDataMapRequest.getDataMap().putLong("max", getMaxTempForWearables(this));
+            putDataMapRequest.getDataMap().putLong("min", getMinTempForWearables(this));
+            putDataMapRequest.setUrgent();
+
+            Wearable.DataApi.putDataItem(mGoogleApiClient, putDataMapRequest.asPutDataRequest())
+                    .setResultCallback(new ResultCallback<DataApi.DataItemResult>() {
+                        @Override
+                        public void onResult(DataApi.DataItemResult dataItemResult) {
+                            if (Log.isLoggable(TAG, Log.DEBUG)) {
+                                Log.d(TAG, "putDataItem result status: " + dataItemResult.getStatus());
+                            }
+                        }
+                    });
+        }
     }
 }

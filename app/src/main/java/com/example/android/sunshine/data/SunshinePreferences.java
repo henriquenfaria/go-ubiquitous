@@ -31,6 +31,7 @@ public final class SunshinePreferences {
     public static final String PREF_COORD_LAT = "coord_lat";
     public static final String PREF_COORD_LONG = "coord_long";
 
+    public static final String PREF_WEATHER_ICON_ID = "weather_icon_id";
     public static final String PREF_MAX_TEMP = "max_temp";
     public static final String PREF_MIN_TEMP = "min_temp";
 
@@ -247,9 +248,10 @@ public final class SunshinePreferences {
     }
 
 
-    public static void setTodayDataForWearables(Context context, long max, long min) {
+    public static void setTodayDataForWearables(Context context, int weatherIconId, long max, long min) {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
         SharedPreferences.Editor editor = sp.edit();
+        editor.putInt(PREF_WEATHER_ICON_ID, weatherIconId);
         editor.putLong(PREF_MAX_TEMP, max);
         editor.putLong(PREF_MIN_TEMP, min);
         editor.apply();
@@ -265,5 +267,11 @@ public final class SunshinePreferences {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
         long min = sp.getLong(PREF_MIN_TEMP, 0);
         return min;
+    }
+
+    public static int getWeatherIconIdForWearables(Context context) {
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
+        int id = sp.getInt(PREF_WEATHER_ICON_ID, 0);
+        return id;
     }
 }
