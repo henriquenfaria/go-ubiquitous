@@ -1,11 +1,13 @@
 package com.example.android.sunshine.watchface;
 
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.example.android.sunshine.utilities.WearableUtils;
@@ -96,9 +98,22 @@ public class WeatherListenerService extends WearableListenerService
                     Log.d("HNFTEST", "icon = " + bitmap.getByteCount());
                     Log.d("HNFTEST", "max = " + dataMap.getLong("max"));
                     Log.d("HNFTEST", "min = " + dataMap.getLong("min"));
+
+                    //TODO: Must add icon Bitmap
+                    sendWeatherUpdateBroadcast( dataMap.getLong("max"), dataMap.getLong("min"));
+
                 }
             }
         }
+    }
+
+    //TODO: Must add icon Bitmap
+    private void sendWeatherUpdateBroadcast(long high, long low) {
+        Intent intent = new Intent();
+        intent.setAction(WearableUtils.ACTION_WEATHER_UPDATED);
+        intent.putExtra(WearableUtils.EXTRA_HIGH_TEMPERATURE, high);
+        intent.putExtra(WearableUtils.EXTRA_LOW_TEMPERATURE, low);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
     // https://developer.android.com/training/wearables/data-layer/assets.html#ReceiveAsset
