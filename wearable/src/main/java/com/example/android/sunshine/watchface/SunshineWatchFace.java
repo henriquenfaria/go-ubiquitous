@@ -31,6 +31,7 @@ import android.os.Message;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
+import android.util.Log;
 import android.view.SurfaceHolder;
 
 import com.example.android.sunshine.R;
@@ -139,6 +140,8 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
         public void onCreate(SurfaceHolder holder) {
             super.onCreate(holder);
 
+            Log.d(TAG, "onCreate");
+
             //TODO: We probably need to check for the initial and updated weather data
 
             setWatchFaceStyle(new WatchFaceStyle.Builder(SunshineWatchFace.this)
@@ -164,6 +167,9 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
             mWeatherPaint.setTextSize(resources.getDimension(R.dimen.weather_text_size));
 
             mCalendar = Calendar.getInstance();
+
+            mHigh = WearableUtils.getMaxTempData(SunshineWatchFace.this);
+            mLow = WearableUtils.getMinTempData(SunshineWatchFace.this);
         }
 
         @Override

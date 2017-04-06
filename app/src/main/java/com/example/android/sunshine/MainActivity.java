@@ -392,6 +392,7 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         Log.d(TAG, "onConnected: " + bundle);
+
         //sendWeatherDataToWearables();
     }
 
@@ -420,8 +421,6 @@ public class MainActivity extends AppCompatActivity implements
             long max = Math.round(data.getDouble(INDEX_WEATHER_MAX_TEMP));
             long min = Math.round(data.getDouble(INDEX_WEATHER_MIN_TEMP));
 
-            Log.d("HNFTEST", "" + weatherConditionId + ", " + max + ", " + min);
-
             //TODO: Set today's max/min values
             setTodayDataForWearables(this, weatherConditionId, max, min);
         }
@@ -437,20 +436,16 @@ public class MainActivity extends AppCompatActivity implements
 
             int weatherIconId = SunshineWeatherUtils
                     .getSmallArtResourceIdForWeatherCondition(getWeatherIconIdForWearables(this));
-
-
+            
             Bitmap iconBitmap = BitmapFactory.decodeResource(getApplicationContext().getResources(), weatherIconId);
             Asset iconAsset = createAssetFromBitmap(iconBitmap);
 
-            if (iconAsset != null) {
-                Log.d("HNFTEST", "iconAsset != null");
-            } else {
-                Log.d("HNFTEST", "iconAsset == null");
-            }
+            //putDataMapRequest.getDataMap().putLong("timestamp", System.currentTimeMillis());
 
             putDataMapRequest.getDataMap().putAsset("icon", iconAsset);
             putDataMapRequest.getDataMap().putLong("max", getMaxTempForWearables(this));
             putDataMapRequest.getDataMap().putLong("min", getMinTempForWearables(this));
+
             putDataMapRequest.setUrgent();
 
             Wearable.DataApi.putDataItem(mGoogleApiClient, putDataMapRequest.asPutDataRequest())

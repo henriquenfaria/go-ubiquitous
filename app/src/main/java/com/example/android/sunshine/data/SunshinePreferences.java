@@ -247,7 +247,6 @@ public final class SunshinePreferences {
         editor.apply();
     }
 
-
     public static void setTodayDataForWearables(Context context, int weatherIconId, long max, long min) {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
         SharedPreferences.Editor editor = sp.edit();
