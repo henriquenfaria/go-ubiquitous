@@ -32,8 +32,8 @@ public final class SunshinePreferences {
     public static final String PREF_COORD_LONG = "coord_long";
 
     public static final String PREF_WEATHER_ICON_ID = "weather_icon_id";
-    public static final String PREF_MAX_TEMP = "max_temp";
-    public static final String PREF_MIN_TEMP = "min_temp";
+    public static final String PREF_HIGH_TEMP = "high_temp";
+    public static final String PREF_LOW_TEMP = "low_temp";
 
     /**
      * Helper method to handle setting location details in Preferences (city name, latitude,
@@ -251,21 +251,21 @@ public final class SunshinePreferences {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
         SharedPreferences.Editor editor = sp.edit();
         editor.putInt(PREF_WEATHER_ICON_ID, weatherIconId);
-        editor.putLong(PREF_MAX_TEMP, max);
-        editor.putLong(PREF_MIN_TEMP, min);
+        editor.putLong(PREF_HIGH_TEMP, max);
+        editor.putLong(PREF_LOW_TEMP, min);
         editor.apply();
     }
 
-    public static long getMaxTempForWearables(Context context) {
+    public static long getHighTempForWearables(Context context) {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
-        long max = sp.getLong(PREF_MAX_TEMP, 0);
-        return max;
+        long high = sp.getLong(PREF_HIGH_TEMP, 0);
+        return high;
     }
 
-    public static long getMinTempForWearables(Context context) {
+    public static long getLowTempForWearables(Context context) {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
-        long min = sp.getLong(PREF_MIN_TEMP, 0);
-        return min;
+        long low = sp.getLong(PREF_LOW_TEMP, 0);
+        return low;
     }
 
     public static int getWeatherIconIdForWearables(Context context) {

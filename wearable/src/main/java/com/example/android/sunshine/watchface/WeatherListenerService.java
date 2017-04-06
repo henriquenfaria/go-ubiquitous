@@ -4,7 +4,6 @@ package com.example.android.sunshine.watchface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -14,16 +13,12 @@ import android.util.Log;
 import com.example.android.sunshine.utilities.WearableUtils;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.wearable.Asset;
-import com.google.android.gms.wearable.DataApi;
 import com.google.android.gms.wearable.DataEvent;
 import com.google.android.gms.wearable.DataEventBuffer;
 import com.google.android.gms.wearable.DataMap;
 import com.google.android.gms.wearable.DataMapItem;
 import com.google.android.gms.wearable.Node;
-import com.google.android.gms.wearable.NodeApi;
-import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
 import com.google.android.gms.wearable.WearableListenerService;
 
@@ -34,12 +29,9 @@ public class WeatherListenerService extends WearableListenerService
         implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
     private final static long TIMEOUT_SECONDS = 30;
-
     private final static String TAG = WeatherListenerService.class.getSimpleName();
-
     private GoogleApiClient mGoogleApiClient;
 
-    private Node mConnectedNode;
 
     @Override
     public void onCreate() {
@@ -59,8 +51,6 @@ public class WeatherListenerService extends WearableListenerService
             mGoogleApiClient.connect();
             Log.v(TAG, "Connecting to GoogleApiClient..");
         }
-
-        //getWeatherData(WearableUtils.WEATHER_WEARABLE_PATH);
     }
 
     @Override
@@ -80,11 +70,6 @@ public class WeatherListenerService extends WearableListenerService
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         Log.d(TAG, "onConnected: " + bundle);
-        //getWeatherData(WearableUtils.WEATHER_WEARABLE_PATH);
-        //Wearable.DataApi.addListener(mGoogleApiClient, WeatherListenerService.this);
-
-
-
     }
 
     @Override
@@ -103,18 +88,17 @@ public class WeatherListenerService extends WearableListenerService
         for (DataEvent dataEvent : dataEvents) {
             if (dataEvent.getType() == DataEvent.TYPE_CHANGED) {
                 DataMap dataMap = DataMapItem.fromDataItem(dataEvent.getDataItem()).getDataMap();
-                if (WearableUtils.WEATHER_WEARABLE_PATH.equalsIgnoreCase(dataEvent.getDataItem()
+                if (WearableUtils.PATH_WEATHER_DATA.equalsIgnoreCase(dataEvent.getDataItem()
                         .getUri().getPath())) {
-                    //TODO: Just for testing. Put real weather data later.
-                    Asset iconAsset = dataMap.getAsset("icon");
+
+                    Asset iconAsset = dataMap.getAsset(WearableUtils.DATA_WEATHER_ICON);
                     Bitmap bitmap = loadBitmapFromAsset(iconAsset);
+                    long high = dataMap.getLong(WearableUtils.DATA_WEATHER_HIGH_TEMPERATURE);
+                    long low = dataMap.getLong(WearableUtils.DATA_WEATHER_LOW_TEMPERATURE);
 
-                    //TODO: Must add icon Bitmap
-                    sendWeatherUpdateBroadcast(dataMap.getLong("max"), dataMap.getLong("min"));
+                    WearableUtils.saveWeatherData(WeatherListenerService.this, bitmap, high, low);
 
-                    WearableUtils.saveWeatherData(WeatherListenerService.this,
-                            dataMap.getLong("max"), dataMap.getLong("min"));
-
+                    sendWeatherUpdateBroadcast();
                 }
             }
         }
@@ -122,71 +106,9 @@ public class WeatherListenerService extends WearableListenerService
     }
 
 
-    // TODO: Not needed?
-    // https://medium.com/@manuelvicnt/android-wear-accessing-the-data-layer-api-d64fd55982e3
-    private void getWeatherData(final String pathToContent) {
-        setConnectedNode();
-
-        Wearable.NodeApi.getLocalNode(mGoogleApiClient).setResultCallback(new ResultCallback<NodeApi.GetLocalNodeResult>() {
-            @Override
-            public void onResult(@NonNull NodeApi.GetLocalNodeResult getLocalNodeResult) {
-                Uri uri = new
-                        Uri.Builder()
-                        .scheme(PutDataRequest.WEAR_URI_SCHEME)
-                        .path(pathToContent)
-                        .authority(mConnectedNode.getId())
-                        .build();
-
-                Wearable.DataApi.getDataItem(mGoogleApiClient, uri).setResultCallback(
-                        new ResultCallback<DataApi.DataItemResult>() {
-                            @Override
-                            public void onResult(DataApi.DataItemResult dataItemResult) {
-                                if (dataItemResult.getStatus().isSuccess() &&
-                                        dataItemResult.getDataItem() != null) {
-
-                                    DataMap dataMap = DataMapItem.fromDataItem(dataItemResult
-                                            .getDataItem()).getDataMap();
-                                    if (WearableUtils.WEATHER_WEARABLE_PATH.equalsIgnoreCase
-                                            (dataItemResult.getDataItem().getUri().getPath())) {
-
-                                        //TODO: Just for testing. Put real weather data later.
-                                        Asset iconAsset = dataMap.getAsset("icon");
-                                        Bitmap bitmap = loadBitmapFromAsset(iconAsset);
-
-                                        //TODO: Must add icon Bitmap
-                                        sendWeatherUpdateBroadcast(dataMap.getLong("max"),
-                                                dataMap.getLong("min"));
-
-                                        WearableUtils.saveWeatherData(WeatherListenerService.this,
-                                                dataMap.getLong("max"), dataMap.getLong("min"));
-
-                                    }
-                                }
-                            }
-                        });
-            }
-
-        });
-    }
-
-    private void setConnectedNode() {
-        Wearable.NodeApi.getConnectedNodes(mGoogleApiClient).setResultCallback(new ResultCallback<NodeApi.GetConnectedNodesResult>() {
-            @Override
-            public void onResult(NodeApi.GetConnectedNodesResult nodes) {
-                for (Node node : nodes.getNodes()) {
-                    mConnectedNode = node;
-                }
-            }
-        });
-    }
-
-
-    //TODO: Must add icon Bitmap
-    private void sendWeatherUpdateBroadcast(long high, long low) {
+    private void sendWeatherUpdateBroadcast() {
         Intent intent = new Intent();
         intent.setAction(WearableUtils.ACTION_WEATHER_UPDATED);
-        intent.putExtra(WearableUtils.EXTRA_HIGH_TEMPERATURE, high);
-        intent.putExtra(WearableUtils.EXTRA_LOW_TEMPERATURE, low);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
@@ -196,7 +118,6 @@ public class WeatherListenerService extends WearableListenerService
             throw new IllegalArgumentException("Asset must be non-null");
         }
 
-        //TODO: Must not be in the UI thread
         ConnectionResult result =
                 mGoogleApiClient.blockingConnect(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         if (!result.isSuccess()) {

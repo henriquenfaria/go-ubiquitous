@@ -3,4 +3,5 @@
     <string name="my_digital_name" translatable="false">Sunshine</string>
     <string name="temperature_text" translatable="false">%1$dº %2$dº</string>
     <string name="message">Watch face tapped</string>
+    <string name="please_sync_sunshine">Please, sync sunshine!</string>
 </resources>

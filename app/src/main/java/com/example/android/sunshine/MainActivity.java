@@ -51,8 +51,8 @@ import com.google.android.gms.wearable.Wearable;
 
 import java.io.ByteArrayOutputStream;
 
-import static com.example.android.sunshine.data.SunshinePreferences.getMaxTempForWearables;
-import static com.example.android.sunshine.data.SunshinePreferences.getMinTempForWearables;
+import static com.example.android.sunshine.data.SunshinePreferences.getHighTempForWearables;
+import static com.example.android.sunshine.data.SunshinePreferences.getLowTempForWearables;
 import static com.example.android.sunshine.data.SunshinePreferences.getWeatherIconIdForWearables;
 import static com.example.android.sunshine.data.SunshinePreferences.setTodayDataForWearables;
 
@@ -61,8 +61,6 @@ public class MainActivity extends AppCompatActivity implements
         ForecastAdapter.ForecastAdapterOnClickHandler,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener {
-
-    private final String TAG = MainActivity.class.getSimpleName();
 
     /*
      * The columns of data that we are interested in displaying within our MainActivity's list of
@@ -74,7 +72,6 @@ public class MainActivity extends AppCompatActivity implements
             WeatherContract.WeatherEntry.COLUMN_MIN_TEMP,
             WeatherContract.WeatherEntry.COLUMN_WEATHER_ID,
     };
-
     /*
      * We store the indices of the values in the array of Strings above to more quickly be able to
      * access the data from our query. If the order of the Strings above changes, these indices
@@ -84,8 +81,6 @@ public class MainActivity extends AppCompatActivity implements
     public static final int INDEX_WEATHER_MAX_TEMP = 1;
     public static final int INDEX_WEATHER_MIN_TEMP = 2;
     public static final int INDEX_WEATHER_CONDITION_ID = 3;
-
-
     /*
      * This ID will be used to identify the Loader responsible for loading our weather forecast. In
      * some cases, one Activity can deal with many Loaders. However, in our case, there is only one.
@@ -94,7 +89,7 @@ public class MainActivity extends AppCompatActivity implements
      * it is unique and consistent.
      */
     private static final int ID_FORECAST_LOADER = 44;
-
+    private final String TAG = MainActivity.class.getSimpleName();
     private ForecastAdapter mForecastAdapter;
     private RecyclerView mRecyclerView;
     private int mPosition = RecyclerView.NO_POSITION;
@@ -103,6 +98,11 @@ public class MainActivity extends AppCompatActivity implements
 
     private GoogleApiClient mGoogleApiClient;
 
+    private static Asset createAssetFromBitmap(Bitmap bitmap) {
+        final ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteStream);
+        return Asset.createFromBytes(byteStream.toByteArray());
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -406,22 +406,14 @@ public class MainActivity extends AppCompatActivity implements
         Log.d(TAG, "onConnectionFailed: " + connectionResult);
     }
 
-    private static Asset createAssetFromBitmap(Bitmap bitmap) {
-        final ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteStream);
-        return Asset.createFromBytes(byteStream.toByteArray());
-    }
-
     private void storeWeatherDataForWearables(Cursor data) {
-        if (data != null  && data.getCount() != 0) {
-            //TODO: Not sure if this could cause side-effect. Must check!
+        if (data != null && data.getCount() != 0) {
             data.moveToFirst();
 
             int weatherConditionId = (data.getInt(INDEX_WEATHER_CONDITION_ID));
             long max = Math.round(data.getDouble(INDEX_WEATHER_MAX_TEMP));
             long min = Math.round(data.getDouble(INDEX_WEATHER_MIN_TEMP));
 
-            //TODO: Set today's max/min values
             setTodayDataForWearables(this, weatherConditionId, max, min);
         }
     }
@@ -429,23 +421,18 @@ public class MainActivity extends AppCompatActivity implements
     private void sendWeatherDataToWearables() {
         if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
             PutDataMapRequest putDataMapRequest = PutDataMapRequest
-                    .create(WearableUtils.WEATHER_WEARABLE_PATH);
-            //TODO: Just for testing. Get real weather data later.
-            /* putDataMapRequest.getDataMap().putLong("icon", SunshineWeatherUtils
-                .getLargeArtResourceIdForWeatherCondition(getWeatherIconIdForWearables(this)));*/
-
+                    .create(WearableUtils.PATH_WEATHER_DATA);
             int weatherIconId = SunshineWeatherUtils
                     .getSmallArtResourceIdForWeatherCondition(getWeatherIconIdForWearables(this));
-            
             Bitmap iconBitmap = BitmapFactory.decodeResource(getApplicationContext().getResources(), weatherIconId);
+
             Asset iconAsset = createAssetFromBitmap(iconBitmap);
+            long high = getHighTempForWearables(this);
+            long low = getLowTempForWearables(this);
 
-            //putDataMapRequest.getDataMap().putLong("timestamp", System.currentTimeMillis());
-
-            putDataMapRequest.getDataMap().putAsset("icon", iconAsset);
-            putDataMapRequest.getDataMap().putLong("max", getMaxTempForWearables(this));
-            putDataMapRequest.getDataMap().putLong("min", getMinTempForWearables(this));
-
+            putDataMapRequest.getDataMap().putAsset(WearableUtils.DATA_WEATHER_ICON, iconAsset);
+            putDataMapRequest.getDataMap().putLong(WearableUtils.DATA_WEATHER_HIGH_TEMPERATURE, high);
+            putDataMapRequest.getDataMap().putLong(WearableUtils.DATA_WEATHER_LOW_TEMPERATURE, low);
             putDataMapRequest.setUrgent();
 
             Wearable.DataApi.putDataItem(mGoogleApiClient, putDataMapRequest.asPutDataRequest())
@@ -459,4 +446,5 @@ public class MainActivity extends AppCompatActivity implements
                     });
         }
     }
+
 }
