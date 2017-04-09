@@ -18,13 +18,14 @@ import com.google.android.gms.wearable.DataEvent;
 import com.google.android.gms.wearable.DataEventBuffer;
 import com.google.android.gms.wearable.DataMap;
 import com.google.android.gms.wearable.DataMapItem;
-import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.Wearable;
 import com.google.android.gms.wearable.WearableListenerService;
 
 import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
 
+
+// Service to receive weather data from Sunshine app
 public class WeatherListenerService extends WearableListenerService
         implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
@@ -104,7 +105,6 @@ public class WeatherListenerService extends WearableListenerService
         }
         dataEvents.release();
     }
-
 
     private void sendWeatherUpdateBroadcast() {
         Intent intent = new Intent();

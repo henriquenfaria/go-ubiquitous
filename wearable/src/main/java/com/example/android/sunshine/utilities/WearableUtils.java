@@ -39,6 +39,7 @@ public class WearableUtils {
     public static final String WEATHER_ICON_DIRECTORY = "weatherIcon";
     public static final String WEATHER_ICON_NAME = "icon.png";
 
+    // Store weather data (high, low and icon) locally to improve performance and battery usage
     public static void saveWeatherData(Context context, Bitmap icon, long max, long min) {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
         SharedPreferences.Editor editor = sp.edit();
@@ -65,18 +66,21 @@ public class WearableUtils {
         }
     }
 
-    public static long getHihgTemperatureData(Context context) {
+    // Get high temperature value from shared preferences
+    public static long getHighTemperatureData(Context context) {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
         long high = sp.getLong(PREF_HIGH_TEMPERATURE, 0);
         return high;
     }
 
+    // Get low temperature value from shared preferences
     public static long getLowTemperatureData(Context context) {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
         long low = sp.getLong(PREF_LOW_TEMPERATURE, 0);
         return low;
     }
 
+    // Get weather icon from internal storage
     public static Bitmap getWeatherIconData(Context context) {
         FileInputStream inputStream = null;
         try {
@@ -101,13 +105,7 @@ public class WearableUtils {
         return null;
     }
 
-    private static File createFile(Context context) {
-        File directory = context.getDir(WEATHER_ICON_DIRECTORY, Context.MODE_PRIVATE);
-        File file =  new File(directory, WEATHER_ICON_NAME);
-        return file;
-    }
-
-
+    // Resize bitmap size to reduce storage usage
     public static Bitmap getResizedBitmap(Bitmap bm, float newHeight, float newWidth) {
         if (bm == null) {
             return null;
@@ -121,5 +119,11 @@ public class WearableUtils {
         matrix.postScale(scaleWidth, scaleHeight);
         Bitmap resizedBitmap = Bitmap.createBitmap(bm, 0, 0, width, height, matrix, true);
         return resizedBitmap;
+    }
+
+    private static File createFile(Context context) {
+        File directory = context.getDir(WEATHER_ICON_DIRECTORY, Context.MODE_PRIVATE);
+        File file =  new File(directory, WEATHER_ICON_NAME);
+        return file;
     }
 }

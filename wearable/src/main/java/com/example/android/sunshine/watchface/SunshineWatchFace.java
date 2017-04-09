@@ -123,7 +123,7 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
             public void onReceive(Context context, Intent intent) {
                 if (intent != null) {
                     mWeatherIcon = WearableUtils.getWeatherIconData(context);
-                    mHigh = WearableUtils.getHihgTemperatureData(context);
+                    mHigh = WearableUtils.getHighTemperatureData(context);
                     mLow = WearableUtils.getLowTemperatureData(context);
                     invalidate();
                 }
@@ -154,11 +154,9 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
 
             mTimePaint = new Paint();
             mTimePaint = createPaint(resources.getColor(R.color.digital_text));
-            //mTimePaint.setTextSize(resources.getDimension(R.dimen.time_text_size));
 
             mDatePaint = new Paint();
             mDatePaint = createPaint(resources.getColor(R.color.digital_text));
-            //mDatePaint.setTextSize(resources.getDimension(R.dimen.date_text_size));
 
             mWeatherPaint = new Paint();
             mWeatherPaint = createPaint(resources.getColor(R.color.digital_text));
@@ -166,7 +164,7 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
             mCalendar = Calendar.getInstance();
 
             mWeatherIcon = WearableUtils.getWeatherIconData(SunshineWatchFace.this);
-            mHigh = WearableUtils.getHihgTemperatureData(SunshineWatchFace.this);
+            mHigh = WearableUtils.getHighTemperatureData(SunshineWatchFace.this);
             mLow = WearableUtils.getLowTemperatureData(SunshineWatchFace.this);
         }
 
@@ -221,8 +219,8 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
             timePaint.getTextBounds(timeText, 0, timeText.length(), textBounds);
 
             Resources resources = SunshineWatchFace.this.getResources();
-            float offset = resources.getDimension(mIsRound
-                    ? R.dimen.time_y_offset_round : R.dimen.time_y_offset);
+            float offset = resources.getDimension(
+                    mIsRound ? R.dimen.time_y_offset_round : R.dimen.time_y_offset);
 
             return centerY / 3 + textBounds.height() + offset;
         }
@@ -232,8 +230,8 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
             datePaint.getTextBounds(dateText, 0, dateText.length(), textBounds);
 
             Resources resources = SunshineWatchFace.this.getResources();
-            float offset = resources.getDimension(mIsRound
-                    ? R.dimen.date_y_offset_round : R.dimen.date_y_offset);
+            float offset = resources.getDimension(
+                    mIsRound ? R.dimen.date_y_offset_round : R.dimen.date_y_offset);
 
             return textBounds.height() + offset;
         }
@@ -259,7 +257,8 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
             if (!mRegisteredWeatherUpdateReceiver) {
                 mRegisteredWeatherUpdateReceiver = true;
                 IntentFilter filter = new IntentFilter(WearableUtils.ACTION_WEATHER_UPDATED);
-                LocalBroadcastManager.getInstance(SunshineWatchFace.this).registerReceiver(mWeatherUpdateReceiver, filter);
+                LocalBroadcastManager.getInstance(SunshineWatchFace.this)
+                        .registerReceiver(mWeatherUpdateReceiver, filter);
             }
         }
 
@@ -271,7 +270,8 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
 
             if (mRegisteredWeatherUpdateReceiver) {
                 mRegisteredWeatherUpdateReceiver = false;
-                LocalBroadcastManager.getInstance(SunshineWatchFace.this).unregisterReceiver(mWeatherUpdateReceiver);
+                LocalBroadcastManager.getInstance(SunshineWatchFace.this)
+                        .unregisterReceiver(mWeatherUpdateReceiver);
             }
         }
 
@@ -294,8 +294,6 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
             float weatherTextSize = resources.getDimension(mIsRound
                     ? R.dimen.weather_text_size_round : R.dimen.weather_text_size);
             mWeatherPaint.setTextSize(weatherTextSize);
-
-            // mXOffset = resources.getDimension(isRound  ? R.dimen.digital_x_offset_round : R.dimen.digital_x_offset);
         }
 
         @Override
@@ -380,10 +378,11 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
                 String highLow = resources.getString(R.string.temperature_text, mHigh, mLow);
                 float weatherXOffset = getXOffset(highLow, mWeatherPaint, bounds);
                 float weatherYOffset = getWeatherYOffset(highLow, mWeatherPaint);
-                float weatherTextSize = resources.getDimension(mIsRound
-                        ? R.dimen.weather_text_size_round : R.dimen.weather_text_size);
+                float weatherTextSize = resources.getDimension(
+                        mIsRound ? R.dimen.weather_text_size_round : R.dimen.weather_text_size);
                 mWeatherPaint.setTextSize(weatherTextSize);
-                canvas.drawText(highLow, weatherXOffset, timeYOffset + dateYOffset + weatherYOffset, mWeatherPaint);
+                canvas.drawText(highLow, weatherXOffset, timeYOffset + dateYOffset +
+                        weatherYOffset, mWeatherPaint);
 
                 // Weather icon
                 float weatherIconXOffset = getXWeatherIconOffset(mWeatherIcon, bounds);
@@ -395,7 +394,8 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
                 float weatherXOffset = getXOffset(needToSync, mWeatherPaint, bounds);
                 float weatherYOffset = getWeatherYOffset(needToSync, mWeatherPaint);
                 mWeatherPaint.setTextSize(resources.getDimension(R.dimen.need_to_sync_text_size));
-                canvas.drawText(needToSync, weatherXOffset, timeYOffset + dateYOffset + weatherYOffset, mWeatherPaint);
+                canvas.drawText(needToSync, weatherXOffset, timeYOffset + dateYOffset +
+                        weatherYOffset, mWeatherPaint);
             }
         }
 
